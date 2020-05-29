@@ -106,7 +106,6 @@ write_files:
             - PROVIDERS_GOOGLE_CLIENT_ID=__GOOGLE_CLIENT_ID__
             - PROVIDERS_GOOGLE_CLIENT_SECRET=__GOOGLE_CLIENT_SECRET__
             - SECRET=__SECRET__
-            - INSECURE_COOKIE=true
             - LOG_LEVEL=debug
             - WHITELIST=__EMAIL__
             - COOKIE_DOMAIN=__DOMAIN__
