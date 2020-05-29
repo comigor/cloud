@@ -1,0 +1,259 @@
+#cloud-config
+hostname: __SUBDOMAIN__
+
+package_update: true
+package_reboot_if_required: true
+
+manage_resolv_conf: true
+resolv_conf:
+  nameservers:
+    - "8.8.8.8"
+    - "8.8.4.4"
+
+users:
+  - name: __USERNAME__
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - __SSH_PUBLIC__
+    groups:
+      - ubuntu
+      - docker
+    sudo:
+      - ALL=(ALL) NOPASSWD:ALL
+
+packages:
+  - docker.io
+  - docker-compose
+
+runcmd:
+  - mkdir -p /shared/config/__SUBDOMAIN__ /shared/gdrive /shared/.gcache
+  - echo IPV4=$(wget http://169.254.169.254/latest/meta-data/public-ipv4 -O- -q) > /shared/config/__SUBDOMAIN__/.env
+  - chown -R __USERNAME__:__USERNAME__ /shared/config /shared/gdrive /shared/.gcache
+  - sudo systemctl start rc-local
+write_files:
+  - path: /shared/config/traefik/acme.json
+    permissions: "0600"
+    content: ""
+  - path: /shared/config/__SUBDOMAIN__/docker-compose.yml
+    permissions: "0755"
+    content: |
+      version: "2"
+      services:
+        ddns4:
+          image: oznu/cloudflare-ddns
+          environment:
+            - EMAIL=__EMAIL__
+            - API_KEY=__CF_APIKEY__
+            - ZONE=__DOMAIN__
+            - SUBDOMAIN=*.__SUBDOMAIN__
+            - PROXIED=false
+          cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
+          network_mode: host
+          restart: always
+        ddns4sub:
+          image: oznu/cloudflare-ddns
+          environment:
+            - EMAIL=__EMAIL__
+            - API_KEY=__CF_APIKEY__
+            - ZONE=__DOMAIN__
+            - SUBDOMAIN=__SUBDOMAIN__
+            - PROXIED=false
+          cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
+          network_mode: host
+          restart: always
+        zerotier:
+          image: spikhalskiy/zerotier
+          volumes:
+            - /shared/config/zerotier:/var/lib/zerotier-one
+          environment:
+            - NETWORK_ID=__ZEROTIER_NETWORK_ID__
+          devices:
+            - /dev/net/tun:/dev/net/tun
+          cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
+          network_mode: host
+          restart: always
+          privileged: true
+        traefik:
+          container_name: traefik
+          image: traefik:1.7
+          command: -c /traefik.toml --logLevel=DEBUG
+          ports:
+            - "80:80"
+            - "443:443"
+            - "8080:8080"
+          volumes:
+            - /shared/config/traefik/traefik.toml:/traefik.toml:ro
+            - /shared/config/traefik/acme.json:/acme.json
+            - /var/run/docker.sock:/var/run/docker.sock
+          depends_on:
+            - ddns4
+            - ddns4sub
+          labels:
+            - "traefik.port=8080"
+          networks:
+            - __NETWORK_NAME__
+        traefik-forward-auth:
+          image: thomseddon/traefik-forward-auth
+          command: ./traefik-forward-auth --rule.1.action=allow --rule.1.rule="Path('/')"
+          environment:
+            - PROVIDERS_GOOGLE_CLIENT_ID=__GOOGLE_CLIENT_ID__
+            - PROVIDERS_GOOGLE_CLIENT_SECRET=__GOOGLE_CLIENT_SECRET__
+            - SECRET=__SECRET__
+            - INSECURE_COOKIE=true
+            - LOG_LEVEL=debug
+            - WHITELIST=__EMAIL__
+            - COOKIE_DOMAIN=__DOMAIN__
+            - AUTH_HOST=auth.__SUBDOMAIN__.__DOMAIN__
+          depends_on:
+            - ddns4
+            - ddns4sub
+          labels:
+            - "traefik.port=4181"
+            - "traefik.backend=traefik-forward-auth"
+            - "traefik.frontend.rule=Host:auth.__SUBDOMAIN__.__DOMAIN__"
+          networks:
+            - __NETWORK_NAME__
+        portainer:
+          container_name: portainer
+          image: portainer/portainer
+          command: --no-auth -H unix:///var/run/docker.sock
+          ports:
+            - "9000:9000"
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /shared/config/portainer:/data
+          restart: always
+          networks:
+            - __NETWORK_NAME__
+        hello1:
+          container_name: hello1
+          image: nginxdemos/hello
+          ports:
+            - "10001:80"
+          restart: always
+          networks:
+            - __NETWORK_NAME__
+      networks:
+        __NETWORK_NAME__:
+          external: true
+
+        # rclone:
+        #   image: tynor88/rclone-mount:dev
+        #   container_name: rclone
+        #   volumes:
+        #     - /shared/config/rclone:/config
+        #     - /shared/gdrive:/data:shared
+        #     - /shared/.gcache:/cache
+        #   environment:
+        #     - RCLONE_CACHE_DB_PATH=/cache
+        #     - "RCLONE_REMOTE_MOUNT=gcrypt:"
+        #     - RCLONE_MOUNT_OPTIONS=-vv --allow-non-empty --fast-list
+        #     - PUID=1000
+        #     - PGID=1000
+        #   devices:
+        #     - /dev/fuse:/dev/fuse
+        #   cap_add:
+        #     - SYS_ADMIN
+        #   security_opt:
+        #     - apparmor:unconfine
+        #     - apparmor:unconfined
+        #   restart: always
+        #   privileged: true
+        # plex:
+        #   image: plexinc/pms-docker
+        #   container_name: plex
+        #   depends_on:
+        #     - rclone
+        #   volumes:
+        #     - /shared/config/plex:/config
+        #     - /shared/gdrive/tv:/tv
+        #     - /shared/gdrive/movies:/movies
+        #   environment:
+        #     - PLEX_UID=1000
+        #     - PLEX_GID=1000
+        #     - TZ=America/Sao_Paulo
+        #     - PLEX_CLAIM=__PLEX_CLAIM__
+        #     - ADVERTISE_IP=http://${IPV4}:32400/
+        #   network_mode: host
+        #   restart: always
+        #   labels:
+        #     - "traefik.port=32400"
+  - path: /shared/config/traefik/traefik.toml
+    permissions: "0755"
+    content: |
+      debug = true
+      logLevel = "DEBUG"
+      defaultEntryPoints = ["http", "https"]
+
+      [entryPoints]
+        [entryPoints.http]
+        address = ":80"
+          [entryPoints.http.redirect]
+            entryPoint = "https"
+        [entryPoints.https]
+        address = ":443"
+          [entryPoints.https.tls]
+          [entryPoints.https.auth.forward]
+          address = "http://traefik-forward-auth:4181"
+          authResponseHeaders = ["X-Forwarded-User"]
+
+      [acme]
+      email = "__ACME_EMAIL__"
+      storage = "acme.json"
+      entryPoint = "https"
+      onHostRule = true
+      # caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+        [acme.httpChallenge]
+        entryPoint = "https"
+
+      [api]
+
+      [ping]
+
+      [docker]
+      endpoint = "unix:///var/run/docker.sock"
+      exposedByDefault = true
+      domain = "__DOMAIN__"
+      network = "__NETWORK_NAME__"
+      usebindportip = true
+  - path: /etc/rc.local
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      cd /shared/config/__SUBDOMAIN__
+      while ! docker ps; do sleep 5; done
+      docker network create __NETWORK_NAME__ || true
+      docker-compose up -d
+  - path: /shared/config/rclone/.rclone.conf
+    permissions: "0666"
+    content: |
+      [gdrive]
+      type = drive
+      client_id = 
+      client_secret = 
+      scope = drive
+      root_folder_id = 
+      service_account_file = 
+      token = __RCLONE_TOKEN__
+
+      [gcache]
+      type = cache
+      remote = gdrive:
+      chunk_size = 5M
+      info_age = 24h
+      chunk_total_size = 5G
+
+      [gcrypt]
+      type = crypt
+      remote = gcache:encrypt
+      filename_encryption = standard
+      directory_name_encryption = true
+      password = __GDRIVE_CRYPT_PASS1__
+      password2 = __GDRIVE_CRYPT_PASS2__

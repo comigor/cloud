@@ -1,0 +1,84 @@
+{
+  "IamFleetRole": "arn:aws:iam::120925030610:role/aws-ec2-spot-fleet-tagging-role",
+  "AllocationStrategy": "lowestPrice",
+  "TargetCapacity": 1,
+  "SpotPrice": "0.0116",
+  "ValidFrom": "2020-04-07T03:11:30Z",
+  "ValidUntil": "2021-04-07T03:11:30Z",
+  "TerminateInstancesWithExpiration": true,
+  "LaunchSpecifications": [
+    {
+      "ImageId": "ami-068663a3c619dd892",
+      "InstanceType": "t3a.micro",
+      "SubnetId": "subnet-0f2a6f9dbfd498a63, subnet-01857967d4e0eab0d, subnet-07e37b12970523289, subnet-0d51addde3b7cdc9d, subnet-0ba2e7b48c0961a57, subnet-02c8e8733b4b15323",
+      "KeyName": "id_rsa",
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "SnapshotId": "snap-035ee9b0c38e6b45d",
+            "VolumeSize": 8,
+            "VolumeType": "standard"
+          }
+        }
+      ],
+      "SpotPrice": "0.0094",
+      "SecurityGroups": [
+        {
+          "GroupId": "sg-c69b3f81"
+        }
+      ],
+      "UserData": "__USERDATA__"
+    },
+    {
+      "ImageId": "ami-068663a3c619dd892",
+      "InstanceType": "t3.micro",
+      "SubnetId": "subnet-0f2a6f9dbfd498a63, subnet-01857967d4e0eab0d, subnet-07e37b12970523289, subnet-0d51addde3b7cdc9d, subnet-0ba2e7b48c0961a57, subnet-02c8e8733b4b15323",
+      "KeyName": "id_rsa",
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "SnapshotId": "snap-035ee9b0c38e6b45d",
+            "VolumeSize": 8,
+            "VolumeType": "standard"
+          }
+        }
+      ],
+      "SpotPrice": "0.0104",
+      "SecurityGroups": [
+        {
+          "GroupId": "sg-c69b3f81"
+        }
+      ],
+      "UserData": "__USERDATA__"
+    },
+    {
+      "ImageId": "ami-068663a3c619dd892",
+      "InstanceType": "t2.micro",
+      "SubnetId": "subnet-0f2a6f9dbfd498a63, subnet-01857967d4e0eab0d, subnet-07e37b12970523289, subnet-0d51addde3b7cdc9d, subnet-0ba2e7b48c0961a57, subnet-02c8e8733b4b15323",
+      "KeyName": "id_rsa",
+      "BlockDeviceMappings": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "DeleteOnTermination": true,
+            "SnapshotId": "snap-035ee9b0c38e6b45d",
+            "VolumeSize": 8,
+            "VolumeType": "standard"
+          }
+        }
+      ],
+      "SpotPrice": "0.0116",
+      "SecurityGroups": [
+        {
+          "GroupId": "sg-c69b3f81"
+        }
+      ],
+      "UserData": "__USERDATA__"
+    }
+  ],
+  "Type": "maintain"
+}
