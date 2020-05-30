@@ -35,6 +35,9 @@ write_files:
   - path: /shared/config/traefik/acme.json
     permissions: "0600"
     content: "{}"
+  - path: /shared/config/traefik/traefik.log
+    permissions: "0600"
+    content: ""
   - path: /shared/config/__SUBDOMAIN__/docker-compose.yml
     permissions: "0755"
     content: |

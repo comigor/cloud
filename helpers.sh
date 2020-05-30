@@ -4,6 +4,8 @@ function replace_vars {
     file=$1
     source .env
     cat $file \
+        | gsed '/__TRAEFIK_CONFIG_FILE__/e cat traefik.yml | gsed -E "s/^/      /g"' | gsed '/__TRAEFIK_CONFIG_FILE__/d' \
+        | gsed '/__DOCKER_COMPOSE_FILE__/e cat docker-compose.yml | gsed -E "s/^/      /g"' | gsed '/__DOCKER_COMPOSE_FILE__/d' \
         | gsed -E "s/__USERNAME__/$USERNAME/g" \
         | gsed -E "s/__NETWORK_NAME__/$NETWORK_NAME/g" \
         | gsed -E "s/__SSH_PUBLIC__/${SSH_PUBLIC//\//\\/}/g" \
@@ -19,7 +21,5 @@ function replace_vars {
         | gsed -E "s/__PLEX_CLAIM__/$PLEX_CLAIM/g" \
         | gsed -E "s/__RCLONE_TOKEN__/${RCLONE_TOKEN//\//\\/}/g" \
         | gsed -E "s/__GDRIVE_CRYPT_PASS1__/$GDRIVE_CRYPT_PASS1/g" \
-        | gsed -E "s/__GDRIVE_CRYPT_PASS2__/$GDRIVE_CRYPT_PASS2/g" \
-        | gsed '/__TRAEFIK_CONFIG_FILE__/e cat traefik.yml | gsed -E "s/^/      /g"' | gsed '/__TRAEFIK_CONFIG_FILE__/d' \
-        | gsed '/__DOCKER_COMPOSE_FILE__/e cat docker-compose.yml | gsed -E "s/^/      /g"' | gsed '/__DOCKER_COMPOSE_FILE__/d'
+        | gsed -E "s/__GDRIVE_CRYPT_PASS2__/$GDRIVE_CRYPT_PASS2/g"
 }

@@ -51,6 +51,7 @@ services:
     volumes:
       - /shared/config/traefik/traefik.yml:/traefik.yml:ro
       - /shared/config/traefik/acme.json:/acme.json
+      - /shared/config/traefik/traefik.log:/traefik.log
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - ddns4
@@ -97,6 +98,15 @@ services:
     ports:
       - "10001:80"
     restart: always
+    networks:
+      - __NETWORK_NAME__
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "9999:8080"
     networks:
       - __NETWORK_NAME__
 networks:

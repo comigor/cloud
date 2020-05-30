@@ -41,5 +41,11 @@ api:
 
 ping: {}
 
+accessLog:
+  filePath: /traefik.log
+  bufferingSize: 100
+  filters:
+    statusCodes: 400-499
+
 log:
   level: DEBUG
