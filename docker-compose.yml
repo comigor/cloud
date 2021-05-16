@@ -53,6 +53,8 @@ services:
       - /shared/config/traefik/acme.json:/acme.json
       - /shared/config/traefik/traefik.log:/traefik.log
       - /var/run/docker.sock:/var/run/docker.sock
+    #environment:
+    #  - CF_DNS_API_TOKEN=__CF_APIKEY__
     depends_on:
       - ddns4
       - ddns4sub
@@ -62,15 +64,12 @@ services:
       - __NETWORK_NAME__
   auth:
     container_name: auth
-    image: thomseddon/traefik-forward-auth:2
+    image: thomseddon/traefik-forward-auth:latest
     environment:
-      - PROVIDERS_GOOGLE_CLIENT_ID=__GOOGLE_CLIENT_ID__
-      - PROVIDERS_GOOGLE_CLIENT_SECRET=__GOOGLE_CLIENT_SECRET__
-      - SECRET=__SECRET__
-      # - INSECURE_COOKIE=true
-      - WHITELIST=__EMAIL__
-      - COOKIE_DOMAIN=__DOMAIN__
-      - AUTH_HOST=auth.__SUBDOMAIN__.__DOMAIN__
+      - CONFIG=/auth.ini
+      - LOG_LEVEL=debug
+    volumes:
+      - /shared/config/traefik/auth.ini:/auth.ini:ro
     depends_on:
       - ddns4
       - ddns4sub
