@@ -46,6 +46,10 @@ write_files:
     permissions: "0755"
     content: |
       __TRAEFIK_CONFIG_FILE__
+  - path: /shared/config/traefik/auth.ini
+    permissions: "0755"
+    content: |
+      __AUTH_CONFIG_FILE__
   - path: /etc/rc.local
     permissions: "0755"
     content: |
