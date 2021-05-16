@@ -6,6 +6,7 @@ function replace_vars {
     cat $file \
         | gsed '/__TRAEFIK_CONFIG_FILE__/e cat traefik.yml | gsed -E "s/^/      /g"' | gsed '/__TRAEFIK_CONFIG_FILE__/d' \
         | gsed '/__DOCKER_COMPOSE_FILE__/e cat docker-compose.yml | gsed -E "s/^/      /g"' | gsed '/__DOCKER_COMPOSE_FILE__/d' \
+        | gsed '/__AUTH_CONFIG_FILE__/e cat auth.ini | gsed -E "s/^/      /g"' | gsed '/__AUTH_CONFIG_FILE__/d' \
         | gsed -E "s/__USERNAME__/$USERNAME/g" \
         | gsed -E "s/__NETWORK_NAME__/$NETWORK_NAME/g" \
         | gsed -E "s/__SSH_PUBLIC__/${SSH_PUBLIC//\//\\/}/g" \
