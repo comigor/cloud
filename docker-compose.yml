@@ -1,26 +1,17 @@
 version: "2"
 services:
-  ddns4:
-    image: oznu/cloudflare-ddns
+  ddns:
+    image: hotio/cloudflare-ddns
+    container_name: ddns
+    volumes:
+      - /shared/config/cloudflare-ddns:/config
     environment:
-      - EMAIL=__EMAIL__
-      - API_KEY=__CF_APIKEY__
-      - ZONE=__DOMAIN__
-      - SUBDOMAIN=*.__SUBDOMAIN__
-      - PROXIED=false
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    network_mode: host
-    restart: always
-  ddns4sub:
-    image: oznu/cloudflare-ddns
-    environment:
-      - EMAIL=__EMAIL__
-      - API_KEY=__CF_APIKEY__
-      - ZONE=__DOMAIN__
-      - SUBDOMAIN=__SUBDOMAIN__
-      - PROXIED=false
+      - CF_APITOKEN=__CF_APIKEY__
+      - TZ=America/Sao_Paulo
+      - DETECTION_MODE=curl-icanhazip.com
+      - CF_HOSTS=__SUBDOMAIN__.__DOMAIN__;*.__SUBDOMAIN__.__DOMAIN__;__SUBDOMAIN__.__DOMAIN__;*.__SUBDOMAIN__.__DOMAIN__
+      - CF_ZONES=__DOMAIN__;__DOMAIN__;__DOMAIN__;__DOMAIN__
+      - CF_RECORDTYPES=A;A;AAAA;AAAA
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -56,8 +47,7 @@ services:
     #environment:
     #  - CF_DNS_API_TOKEN=__CF_APIKEY__
     depends_on:
-      - ddns4
-      - ddns4sub
+      - ddns
     labels:
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
     networks:
@@ -71,8 +61,7 @@ services:
     volumes:
       - /shared/config/traefik/auth.ini:/auth.ini:ro
     depends_on:
-      - ddns4
-      - ddns4sub
+      - ddns
     labels:
       - "traefik.http.middlewares.traefik-forward-auth.forwardauth.address=http://auth:4181"
       - "traefik.http.middlewares.traefik-forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User"
